@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" href="favicon.ico">
+<link rel="icon" href="favicon.png" sizes="64x64" type="image/png">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<link rel="apple-touch-icon" href="favicon.png">
+<meta property="og:title" content="Tron333">
+<meta property="og:type" content="article">
+<meta property="og:url" content="index.html">
+<meta property="og:image" content="favicon.png">
+<meta property="og:description" content="Up to 333% of your deposits! Decentralized & crowd-funded short-term investment platform powered by the tron blockchain network.">
+<meta name="description" content="Up to 333% of your deposits! Decentralized & crowd-funded short-term investment platform powered by the tron blockchain network.">
+<meta name="twitter:card" value="summary_large_image">
+<title>Tron333</title>
+<link rel="stylesheet" href="fonts/import.css">
+<link rel="stylesheet" href="css/reset.css">
+<link rel="stylesheet" href="css/jqueryui.css">
+<link rel="stylesheet" href="css/custom.css">
+<link rel="stylesheet" href="css/custom-slider.css">
+<script src="js/jquery.min.js"></script>
+<script src="js/jquery.ui.js"></script>
+<script src="js/jquery.ui.touch-punch.min.js"></script>
+<script src="js/jquery.toast.min.js"></script>
+<script src="js/jquery.cookie.min.js"></script>
+<script src="js/moment.js"></script>
+<script src="js/countdown.js"></script>
+<script src="js/tronweb.js"></script>
+<style>[v-cloak] { display:none; }</style>
+</head>
+<body>
+<div class="b-app" id="App" v-cloak>
+	<div id="c_hero" class="container" style="background: none !important; border: none !important">
+		<img src="img/logo.png">
+	</div>
+
+	<div class="container" v-if="contract.launch_date > current_date">
+		<div class="sub">
+			<h1 style="text-align: center">Starting in {{ countdown(new Date(contract.launch_date * 1000)).toString() }}!</h1>
+		</div>
+	</div>
+    
+	<div class="container">
+		<div class="sub" v-if="user.total_invested == 0">
+			<h6>Earn up to 20% Daily!</h6>
+			<button id="view_contract" @click="window.open('https://tronscan.org/#/contract/TVSxU3pv42ihQhUfnC3fyEwiFgUSL5FcZo/code')">VERIFIED SMART CONTRACT &nbsp;&nbsp;[&#x2197;]</button>
+		</div>
+        <div class="sub">
+            <h6>&ldquo;Investment is a long-term process&rdquo;</h6>
+            <table>
+                <thead>
+                    <th>Investment Amount</th>
+                    <th>Daily Profit</th>
+                    <th>Maximum Income</th>
+                </thead>
+                <tr>
+                    <td>50TRX - 5,000TRX</td>
+                    <td>20%</td>
+                    <td>333%</td>
+                </tr>
+                <tr>
+                    <td>5,001TRX - 10,000TRX</td>
+                    <td>15%</td>
+                    <td>333%</td>
+                </tr>
+                <tr>
+                    <td>10,001TRX - 20,000TRX</td>
+                    <td>10%</td>
+                    <td>333%</td>
+                </tr>
+                <tr>
+                    <td>20,001TRX - 50,000TRX</td>
+                    <td>6%</td>
+                    <td>333%</td>
+                </tr>
+                <tr>
+                    <td>50,001TRX - NO LIMIT</td>
+                    <td>2%</td>
+                    <td>333%</td>
+                </tr>
+            </table>
+            <h5>Daily Profit(%) will change once you have reached a threshold amount.</h5>
+        </div>
+    </div>
+    <div class="container">
+		<div class="sub">
+			<h1>Invest Now!</h1>
+            <h4>MINIMUM: 50 TRX</h4>
+            <input type="number" min="50" placeholder="50 trx" value="50" id="trx_value" v-model.number="calc.amount" @change="calc.amount = calc.amount < 50 ? 50 : calc.amount">
+            <button id="btn_invest" @click.prevent="deposit(0, calc.amount)">INVEST</button>
+            <h4>TX Fee: 5-15 TRX</h4>
+		</div>
+		<div class="sub" v-if="user.total_invested > 0 && tronWeb != undefined">
+			<h1>Investments</h1>
+			<table>
+				<thead><th>Amount</th><th>Ends in</th><th>Withdrawable</th></thead>
+				<tr v-for="dep in user.deposits" v-if="dep[1] != 0">
+					<td>{{ tronWeb.fromSun(dep[1]) }} trx</td><td>{{ countdown(new Date(new Date().getTime() + (dep[2] * 1000))).toString() }}</td><td>{{ tronWeb.fromSun(dep[3]) }} trx</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	
+	<div id="c_invest" class="container">
+		<div class="sub">
+			<h1>Dashboad</h1>
+			<h5>Total Invested:</h5><h6 id="total_invest">{{ user.total_invested }}</h6>
+			<h5>Referral Bonus:</h5><h6 id="total_refer">{{ user.total_match_bonus }}</h6>
+			<h5>Withdrawn TRX:</h5><h6 id="total_with">{{ user.total_withdrawn }}</h6>
+		</div>
+		<div class="sub" v-if="contract.launch_date < current_date">
+			<h5>Withdrawable Income</h5>
+			<h6>{{ user.for_withdraw }}</h6>
+			<button id="btn_withdraw" @click.prevent="withdraw()">WITHDRAW</button>
+		</div>
+		<div class="sub" v-if="contract.launch_date < current_date">
+			<h5>Withdrawable Referral</h5>
+			<h6>{{ user.match_bonus }}</h6>
+			<button id="btn_withdraw" @click.prevent="withdraw_referral()">WITHDRAW</button>
+		</div>
+	</div>
+	
+	
+	<div id="c_data" class="container">
+		<div class="sub" v-if="contract.launch_date <= current_date">
+			<h1>Referral Program</h1>
+			<h4>Referral bonus is automatically added to your account when they invest.</h4>
+			<h4>Referral bonus can be withdrawn separately.</h4>
+			<table>
+				<thead><th>Level</th><th>Referral Bonus</th><th v-if="user.total_invested > 0">Referrals</th></thead>
+				<tr><td>1</td><td>8%</td><td v-if="user.total_invested > 0" id="ref_lv1">{{ user.structure[0] }}</td></tr>
+				<tr><td>2</td><td>5%</td><td v-if="user.total_invested > 0" id="ref_lv2">{{ user.structure[1] }}</td></tr>
+				<tr><td>3</td><td>2%</td><td v-if="user.total_invested > 0" id="ref_lv3">{{ user.structure[2] }}</td></tr>
+			</table>
+		</div>
+		<div class="sub" v-if="upline != default_upline">
+			<h6>Referred by</h6>
+			<h5>{{ upline }}</h5>
+		</div>
+		<div class="sub">
+			<h6>Your Referral Link</h6>
+			<h5>{{ location.origin }}/?ref={{ tron.account }}</h5>
+			<button class="copytext" @click="copyText(location.origin + '/?ref=' + tron.account)">COPY</button>
+		</div>
+	</div>
+
+	<div class="container">
+		<div class="sub">
+			<h6>Questions?</h6>
+			<button id="view_telegram" @click="window.open('https://t.me/dtronofficial')" style="display: inline-block; max-width: auto; width: auto">JOIN OUR TELEGRAM GROUP &nbsp;&nbsp;[&#x2197;]</button>
+            <br>
+			<button id="view_contract" @click="window.open('https://tronscan.org/#/contract/TVSxU3pv42ihQhUfnC3fyEwiFgUSL5FcZo/code')" style="display: inline-block; max-width: auto; width: auto">VERIFIED SMART CONTRACT &nbsp;&nbsp;[&#x2197;]</button>
+			<button id="view_audit" @click="alert('Not Yet Audited.')" style="display: inline-block; max-width: auto; width: auto">AUDIT REPORT &nbsp;&nbsp;[&#x2197;]</button>
+		</div>
+	</div>
+	
+	<div class="container" v-if="contract.launch_date < current_date">
+		<div class="sub">
+			<h4 style="text-align: center">Contract running for {{ countdown(new Date(contract.launch_date * 1000)).toString() }}!</h4>
+		</div>
+	</div>
+
+	<div class="container" style="Box-shadow: none; border: none; background: none; color: #fff; text-align: right">
+		<span style="background: #000; display: inline-block; padding: 4px 8px; border-radius: 3px">tron333.com &copy; 2021</span>
+	</div>
+	
+</div>
+
+<script src="js/vue.js"></script>
+<script src="js/custom.js?q=31"></script>
+</body>
+</html>
